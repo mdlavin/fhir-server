@@ -5,7 +5,8 @@ services:
       context: ./../../
       dockerfile: ./build/docker/Dockerfile
       args:
-        FHIR_VERSION: R4
+        FHIR_VERSION: Stu3
+        ASSEMBLY_VER: "3.4.221"
     restart: on-failure
     environment:
       FHIRServer__Security__Enabled: "false"
@@ -13,6 +14,7 @@ services:
       SqlServer__AllowDatabaseCreation: "true"
       SqlServer__Initialize: "true"
       SqlServer__SchemaOptions__AutomaticUpdatesEnabled: "true"
+      FhirServer__Operations__ConvertData__Enabled: "true"
       DataStore: "SqlServer"
     ports:     
       - "8080:8080"
