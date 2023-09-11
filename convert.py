@@ -13,17 +13,33 @@ parser = argparse.ArgumentParser(description='Convert CCDA to FHIR and import it
 parser.add_argument('file', metavar='FILE', type=str, help='The CCDA file to import')
 parser.add_argument('--account', metavar='ACCOUNT', type=str, help='The LifeOmic account to import into')
 parser.add_argument('--project', metavar='PROJECT', type=str, help='The LifeOmic project ID to import into')
+parser.add_argument('--pull', action='store_true', help='Whether to pull the CCDA file from LifeOmic')
+
+# Read the environment variable API_KEY
+API_KEY = os.environ.get('API_KEY')
 
 args = parser.parse_args()
 
+local_ccda_file = args.file
+if args.pull:
+	download_start_resp = requests.get('https://api.us.lifeomic.com/v1/files/' + args.file + '?include=downloadUrl', headers={
+		'LifeOmic-Account': args.account,
+		'Authorization': 'Bearer ' + API_KEY
+	})
+	download_json = download_start_resp.json()
+	print(download_json)
+	r = requests.get(download_json['downloadUrl'])  
+	temp_filename = 'ccda.xml'
+	with open(temp_filename, 'wb') as f:
+		f.write(r.content)
+	local_ccda_file = temp_filename
+
 #Read file as text into variable
-with open(args.file, 'r') as file:
+with open(local_ccda_file, 'r') as file:
     inputData = file.read()
 
 project_id = args.project
 account = args.account
-# Read the environment variable API_KEY
-API_KEY = os.environ.get('API_KEY')
 
 # The local FHIR server URL
 url = "http://localhost:8080/" + quote_plus("$convert-data")
